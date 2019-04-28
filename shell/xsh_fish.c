@@ -1,7 +1,7 @@
 /**
  * @file     xsh_fish.c
  * @provides xsh_fish
- *
+ * TA-BOT:MAILTO paula.vancamp@marquette.edu alexander.kosla@marquette.edu
  */
 /* Embedded XINU, Copyright (C) 2013.  All rights reserved. */
 
@@ -56,6 +56,7 @@ command xsh_fish(int nargs, char *args[])
 {
 	uchar bcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 	int i = 0;
+	int j = 0;
 
 	if (nargs == 2 && strncmp(args[1], "ping", 4) == 0)
     {
@@ -83,12 +84,24 @@ command xsh_fish(int nargs, char *args[])
 	}
 	else if (nargs == 3 && strncmp(args[1], "list", 4) == 0)
 	{
-		// TODO: Locate named node in school,
+		//   Locate named node in school,
 		//   and send a FISH_DIRASK packet to it.
 		//   Wait one second for reply to come in, and
-		//   then print contents of fishlist table.
+		//   then print contents of fishlist table.	
+		if(args[2] != NULL){
+			for(j=0;j<SCHOOLMAX;j++){
+				if(school[j].name==args[2]){
+					fishSend(school[j].name,FISH_DIRASK);
+					sleep(1000);/*wait 1 sec*/
+				}	
+			}
+			/*TO DO LATER...Print contents of fishlist table*/
+			printf("List of fish goes here");
+		}
+		else{	
+			printf("No FiSh \"%s\" found in school.\n", args[2]);
+		}
 		
-		printf("No FiSh \"%s\" found in school.\n", args[2]);
 		return OK;
 	}
 	else if (nargs == 4 && strncmp(args[1], "get", 4) == 0)
@@ -96,8 +109,19 @@ command xsh_fish(int nargs, char *args[])
 		// TODO: Locate named node in school,
 		//   and send a FISH_GETFILE packet to it.
 		//   FileSharer puts file in system when it arrives.
-		
-		printf("No FiSh \"%s\" found in school.\n", args[2]);
+		if(args[2] != NULL){
+			for(j=0;j<SCHOOLMAX;j++){
+				if(school[j].name==args[2]){
+					fishSend(school[j].name, FISH_GETFILE);
+					sleep(1000);/*wait 1 sec*/
+				}	
+			}
+		}
+		/*TO DO LATER... STORE THE FILE*/
+		printf("File will be stored here");
+		else{
+			printf("No FiSh \"%s\" found in school.\n", args[2]);
+		}
 		return OK;
 	}
 	else
