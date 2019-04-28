@@ -96,7 +96,11 @@ command xsh_fish(int nargs, char *args[])
 				}	
 			}
 			/*TO DO LATER...Print contents of fishlist table*/
-			printf("List of fish goes here");
+			printf("List of fish goes here\r\n");
+			int count;
+			for(count=0;count<sizeof(fishlist);count++){
+				printf("%c\r\n",fishlist[count][FISH_MAXNAME]);
+			}
 		}
 		else{	
 			printf("No FiSh \"%s\" found in school.\n", args[2]);
@@ -116,9 +120,9 @@ command xsh_fish(int nargs, char *args[])
 					sleep(1000);/*wait 1 sec*/
 				}	
 			}
+			/*TO DO LATER... STORE THE FILE*/
+			printf("File will be stored here");
 		}
-		/*TO DO LATER... STORE THE FILE*/
-		printf("File will be stored here");
 		else{
 			printf("No FiSh \"%s\" found in school.\n", args[2]);
 		}
