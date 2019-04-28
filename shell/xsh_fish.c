@@ -82,52 +82,55 @@ command xsh_fish(int nargs, char *args[])
 		printf("\n");
 		return OK;
 	}
+
+/********************************************************************/
+/*                        if fish list _____                        */
 	else if (nargs == 3 && strncmp(args[1], "list", 4) == 0)
 	{
-		//   Locate named node in school,
-		//   and send a FISH_DIRASK packet to it.
-		//   Wait one second for reply to come in, and
-		//   then print contents of fishlist table.	
-		if(args[2] != NULL){
-			for(j=0;j<SCHOOLMAX;j++){
-				if(school[j].name==args[2]){
-					fishSend(school[j].name,FISH_DIRASK);
-					sleep(1000);/*wait 1 sec*/
-				}	
-			}
-			/*TO DO LATER...Print contents of fishlist table*/
-			printf("List of fish goes here\r\n");
+	//Locate named node in school and send a FISH_DIRASK packet to it.
+	for(j=0;j<SCHOOLMAX;j++){
+		//check if argument matches a machine in the system
+		int same=strncmp(school[j].name,args[2],FISH_MAXNAME);
+		if(same==0){
+			//send a DIRASK to that node
+			fishSend(school[j].mac,FISH_DIRASK);
+			//testprint
+			printf("match found! \r\n");
+			//wait 1s for response
+			sleep(1000);	
+			/*Print contents of fishlist table*/
 			int count;
-			for(count=0;count<sizeof(fishlist);count++){
+			for(count=0;count<DIRENTRIES;count++){
 				printf("%c\r\n",fishlist[count][FISH_MAXNAME]);
 			}
-		}
-		else{	
-			printf("No FiSh \"%s\" found in school.\n", args[2]);
-		}
-		
 		return OK;
+		}
 	}
+	printf("No FiSh \"%s\" found in school.\n", args[2]);
+	return OK;
+	}
+
+/********************************************************************/
+/*                        if fish get ______                        */	
 	else if (nargs == 4 && strncmp(args[1], "get", 4) == 0)
 	{
-		// TODO: Locate named node in school,
-		//   and send a FISH_GETFILE packet to it.
-		//   FileSharer puts file in system when it arrives.
-		if(args[2] != NULL){
-			for(j=0;j<SCHOOLMAX;j++){
-				if(school[j].name==args[2]){
-					fishSend(school[j].name, FISH_GETFILE);
-					sleep(1000);/*wait 1 sec*/
-				}	
-			}
+	//Locate named node in school
+	for(j=0;j<SCHOOLMAX;j++){
+		if(school[j].name==args[2]){
+			//send the GETFILE packet
+			fishSend(school[j].mac,FISH_GETFILE);
+			//wait 1s for reply	
 			/*TO DO LATER... STORE THE FILE*/
+			//fileSharer puts file in system when it arrives
 			printf("File will be stored here");
-		}
-		else{
-			printf("No FiSh \"%s\" found in school.\n", args[2]);
 		}
 		return OK;
 	}
+	printf("No FiSh \"%s\" found in school.\n", args[2]);
+	return OK;
+	}
+
+/************************************************************************/
 	else
     {
         fprintf(stdout, "Usage: fish [ping | list <node> | get <node> <filename>]\n");
@@ -139,8 +142,6 @@ command xsh_fish(int nargs, char *args[])
 
         return 0;
     }
-
-
 
     return OK;
 }

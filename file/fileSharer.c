@@ -63,10 +63,10 @@ void fishPing(uchar *packet)
 	write(ETH0, packet, ETHER_SIZE + ETHER_MINPAYLOAD);
 }
 /*------------------------------------------------------------------------
- * fishList - Reply to a fish list request.
+ * dir ask - Reply to a fish DIRASK request.
  *------------------------------------------------------------------------
  */
-void fishList(uchar *packet)
+void fishAsk(uchar *packet)
 {
 	uchar *ppkt = packet;
 	struct ethergram *eg = (struct ethergram *)packet;
@@ -79,8 +79,33 @@ void fishList(uchar *packet)
 	bzero(eg->data, ETHER_MINPAYLOAD);
 	/* FISH type becomes ANNOUNCE. */
 	eg->data[0] = FISH_DIRLIST;
-	strncpy(&eg->data[1], nvramGet("hostname\0"), FISH_MAXNAME-1);
+	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
+	for(int i = 0;i<DIRENTRIES;i++){
+		int offset = 1+ (i* (FNAMLEN+1));
+		strncpy(&eg->data[i+offset],(tempNode[i].fn_name), MAXFILES);
+	}
 	write(ETH0, packet, ETHER_SIZE + ETHER_MINPAYLOAD);
+}
+/*------------------------------------------------------------------------
+ * fishList - Reply to a fish list request.
+ *------------------------------------------------------------------------
+ */
+int fishList(uchar *packet)
+{
+	struct ethergram *eg = (struct ethergram *)packet;
+	//initialize fishlist to 0;
+	int x,y;
+	for(x=0;x<DIRENTRIES;x++){
+		for(y=0;y<FNAMLEN;y++){
+			fishlist[x][y]=0;
+		}
+	}
+	//move dir entries into fishlist
+	for(int i = 0;i<DIRENTRIES;i++){
+		int offset = 1 + (i * (FNAMLEN+1));
+		memcpy(fishlist[i],eg->data+offset, MAXFILES);
+	}
+	return OK;
 }
 /*------------------------------------------------------------------------
  * fileSharer - Process that shares files over the network.
@@ -120,6 +145,7 @@ int fileSharer(int dev)
 				break;
 
 			case FISH_DIRASK:
+				fishAsk(packet);			
 				break;	
 
 			case FISH_DIRLIST:
