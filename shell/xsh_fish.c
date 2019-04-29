@@ -94,6 +94,7 @@ command xsh_fish(int nargs, char *args[])
 		if(same==0){
 			//send a DIRASK to that node
 			fishSend(school[j].mac,FISH_DIRASK);
+			//what happens when we send a FISH_DIRASK?
 			//testprint
 			printf("match found! \r\n");
 			//wait 1s for response
