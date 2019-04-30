@@ -78,7 +78,7 @@ void fishAsk(uchar *packet)
 	memcpy(eg->src, myMAC, ETH_ADDR_LEN);
 	/* Zero out payload. */
 	bzero(eg->data, ETHER_MINPAYLOAD);
-	/* FISH type becomes ANNOUNCE. */
+	/* FISH type becomes DIRLIST */
 	eg->data[0] = FISH_DIRLIST;
 	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
 	for(int i = 0;i<DIRENTRIES;i++){
@@ -95,41 +95,45 @@ void fishAsk(uchar *packet)
 int fishList(uchar *packet)
 {
 	struct ethergram *eg = (struct ethergram *)packet;
-	//initialize fishlist to 0; 
-	/*
-	int x,y;
-	printf("you're replying to a dirask, trying to dirlist\r\n");
-	for(x=0;x<DIRENTRIES;x++){
-		for(y=0;y<FNAMLEN;y++){
-			fishlist[x][y]=0;
-		}
-	}
-	//move dir entries into fishlist
-	for(int i = 0;i<DIRENTRIES;i++){
-		int offset = 1 + (i * (FNAMLEN+1));
-		memcpy(fishlist[i],eg->data+offset, MAXFILES);
-	}  this should just return a bunch of zeros */
-/* Source of request becomes destination of reply. */
+	/* Source of request becomes destination of reply. */
 	memcpy(eg->dst, eg->src, ETH_ADDR_LEN);
 	/* Source of reply becomes me. */
 	memcpy(eg->src, myMAC, ETH_ADDR_LEN);
 	/* Zero out payload. */
 	bzero(eg->data, ETHER_MINPAYLOAD);
-	/* FISH type becomes ANNOUNCE. */
-	eg->data[0] = FISH_DIRLIST;
-
+	/* FISH type becomes ?? */
+//	eg->data[0] = FISH_DIRLIST;
+	/*Test print*/
+	printf("replying to dirask\r\n");
+	/*initialize fishlist to all 0s*/
+	int x,y;
+	for(x=0;x<DIRENTRIES;x++){
+		for(y=0;y<FNAMLEN;y++){
+			fishlist[x][y]=0;
+		}
+	}
+	/*Move dir entries into fishlist*/
 	int i;
 	for(i = 0; i<DIRENTRIES;i++){
-		//int offset = 1 + (i * (FNAMLEN+1)); not sure what this does, sorry
-		// we need to check if something is too small, we need to pad it
+	//	int offset = 1 + (i * (FNAMLEN+1));I think we need to use this
+	// we need to check if something is too small, we need to pad it
 		memcpy((void *)filetab[i], eg->data[i], MAXFILES);
-		// access the file names the same way we got them before (i forget how)
-		// for each member of the fishlist, copy that to the eg for MAXFILES
+	//access the file names the same way we got them before i forget how)
+	// for each member of the fishlist, copy that to the eg for MAXFILES
 	}
-	if(i < ETHER_MINPAYLOD) // not exactly this, we need i to be the character count of things that are copied in the packet
-		write(ETH0, packet, ETHER_MINPAYLOAD); // use this to pad if you're under the min character count
-	else
+	if(i < ETHER_MINPAYLOD){
+//not exactly this, we need i to be the character count of things that are copied in the packet
+		write(ETH0, packet, ETHER_MINPAYLOAD);// use this to pad if you're under the min character count
+	}
+	else{
 		write(ETH0, packet, ETHER_SIZE);
+	}
+	/*TEST PRINT LOOP*/
+	for (x=0;x<DIRENTRIES;x++){
+		for(y=0;y<FNAMLEN;y++){
+			printf("%c\r\n",fishlist[x][y]);
+		}
+	}
 	return OK;
 }
 /*------------------------------------------------------------------------
@@ -169,12 +173,12 @@ int fileSharer(int dev)
 				fishPing(packet);
 				break;
 
-			case FISH_DIRASK: // what do we reply to a dirask with?
+			case FISH_DIRASK: //what do we reply to a dirask with?
 					  // we reply with a dirlist
 				fishList(packet);			
 				break;	
 
-			case FISH_DIRLIST: // what do we do when we get a dirlist?
+			case FISH_DIRLIST://what do we do when we get a dirlist?
 					   // maybe just print it?
 				fishList(packet);
 				break;
