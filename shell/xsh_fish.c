@@ -101,6 +101,7 @@ command xsh_fish(int nargs, char *args[])
 			sleep(1000);	
 			/*Print contents of fishlist table*/
 			int dir,file;
+			printf("fishlist[0][0]: %c\r\n", fishlist[0][0]);
 			for(dir=0;dir<DIRENTRIES;dir++){
 				for(file=0;file<FNAMLEN;file++){
 					printf("%c\r\n",fishlist[dir][file]);
