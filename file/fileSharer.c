@@ -85,10 +85,10 @@ void fishAsk(uchar *packet)
 	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
 	for(int i = 0;i<DIRENTRIES;i++){
 		int offset = 1+ (i* (FNAMLEN+1));
-		//printf("%s\r\n",tempNode[i].fn_name);
-		//printf("%s\r\n",eg->data[i]);
+		printf("%s\r\n",tempNode[i].fn_name);
+		printf("%s\r\n",eg->data[i]);
 		strncpy(&eg->data[offset],(tempNode[i].fn_name), MAXFILES);
-		//printf("%s\r\n",eg->data[i]);
+		printf("%s\r\n",eg->data[i]);
 	}
 	write(ETH0, packet, ETHER_SIZE + ETHER_MINPAYLOAD);
 }
@@ -100,16 +100,18 @@ void fishAsk(uchar *packet)
 int fishList(uchar *packet)
 {
 	struct ethergram *eg = (struct ethergram *)packet;
+	printf("In fishList func\r\n");
 	/* Source of request becomes destination of reply. */
 	memcpy(eg->dst, eg->src, ETH_ADDR_LEN);
 	/* Source of reply becomes me. */
 	memcpy(eg->src, myMAC, ETH_ADDR_LEN);
+	printf("swapped addresses and about to zero the payload\r\n");
 	/* Zero out payload. */
 	bzero(eg->data, ETHER_MINPAYLOAD);
 	/* FISH type becomes ?? */
 //	eg->data[0] = FISH_DIRLIST;
 	/*Test print*/
-	printf("replying to dirask\r\n");
+	printf("zero'd payload\r\n");
 	/*initialize fishlist to all 0s*/
 	int x,y;
 	for(x=0;x<DIRENTRIES;x++){
