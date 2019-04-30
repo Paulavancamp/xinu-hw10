@@ -115,13 +115,13 @@ int fishList(uchar *packet)
 	/*Move dir entries into fishlist*/
 	int i;
 	for(i = 0; i<DIRENTRIES;i++){
-	//	int offset = 1 + (i * (FNAMLEN+1));I think we need to use this
-	// we need to check if something is too small, we need to pad it
-		memcpy((void *)filetab[i], eg->data[i], MAXFILES);
+		int offset = 1 + (i * (FNAMLEN+1));
+	//we need to check if something is too small, we need to pad it
+		memcpy(fishlist[i+offset], eg->data[i], MAXFILES);
 	//access the file names the same way we got them before i forget how)
 	// for each member of the fishlist, copy that to the eg for MAXFILES
 	}
-	if(i < ETHER_MINPAYLOD){
+	if(i < ETHER_MINPAYLOAD){
 //not exactly this, we need i to be the character count of things that are copied in the packet
 		write(ETH0, packet, ETHER_MINPAYLOAD);// use this to pad if you're under the min character count
 	}
