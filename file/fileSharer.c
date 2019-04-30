@@ -71,7 +71,7 @@ void fishAsk(uchar *packet)
 {
 	uchar *ppkt = packet;
 	struct ethergram *eg = (struct ethergram *)packet;
-
+	printf("In fishAsk function\r\n");
 	/* Source of request becomes destination of reply. */
 	memcpy(eg->dst, eg->src, ETH_ADDR_LEN);
 	/* Source of reply becomes me. */
@@ -79,11 +79,16 @@ void fishAsk(uchar *packet)
 	/* Zero out payload. */
 	bzero(eg->data, ETHER_MINPAYLOAD);
 	/* FISH type becomes DIRLIST */
+	printf("swapped addresses and zeroed payload\r\n");
 	eg->data[0] = FISH_DIRLIST;
+	printf("set fish type to dirlist\r\n");
 	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
 	for(int i = 0;i<DIRENTRIES;i++){
 		int offset = 1+ (i* (FNAMLEN+1));
-		strncpy(&eg->data[i+offset],(tempNode[i].fn_name), MAXFILES);
+		//printf("%s\r\n",tempNode[i].fn_name);
+		//printf("%s\r\n",eg->data[i]);
+		strncpy(&eg->data[offset],(tempNode[i].fn_name), MAXFILES);
+		//printf("%s\r\n",eg->data[i]);
 	}
 	write(ETH0, packet, ETHER_SIZE + ETHER_MINPAYLOAD);
 }
@@ -175,7 +180,7 @@ int fileSharer(int dev)
 
 			case FISH_DIRASK: //what do we reply to a dirask with?
 					  // we reply with a dirlist
-				fishList(packet);			
+				fishAsk(packet);			
 				break;	
 
 			case FISH_DIRLIST://what do we do when we get a dirlist?
