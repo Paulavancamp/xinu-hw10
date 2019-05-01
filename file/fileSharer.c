@@ -80,15 +80,11 @@ void fishAsk(uchar *packet)
 	/* FISH type becomes DIRLIST */
 	eg->data[0] = FISH_DIRLIST;
 	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
-	//printf("struct\r\n"); // tested to this point with no errors
-	//printf("%s\r\n", tempNode[0].fn_name);
-	printf("FUCK ");
+	// tested to this point with no errors
 	for(int i = 0;i<1;i++){
-		printf("fuck my life ");
 		int offset = 1+ (i* (FNAMLEN+1));
-		//printf("%s\r\n",tempNode[i].fn_name);
 		printf("%s\r\n",eg->data[i]);
-		memcpy((void *)&eg->data[offset],(void *)tempNode[i].fn_name, FNAMLEN);
+		memcpy((void *)eg->data[offset],(void *)tempNode[i].fn_name, FNAMLEN);
 		printf("%s\r\n",eg->data[i]);
 	}
 	write(ETH0, packet, ETHER_SIZE + ETHER_MINPAYLOAD);
