@@ -80,19 +80,18 @@ void fishAsk(uchar *packet)
 	/* FISH type becomes DIRLIST */
 	eg->data[0] = FISH_DIRLIST;
 	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
-	ppkt++;
-	for(int i = 0;i<1;i++){
-		int offset = 1+(i*FNAMLEN);
+	for(int i = 0;i<DIRENTRIES;i++){
+		ppkt+=FNAMLEN;
 		if(tempNode[i].fn_state){
-			strncpy(&eg->data[offset],(void *)tempNode[i].fn_name, FNAMLEN);
+			strncpy(&eg->data[1+i*FNAMLEN],tempNode[i].fn_name, FNAMLEN);
 		}
 		else{
 			for(int j=0;j<FNAMLEN;j++){
-				eg->data[j+offset]=0;	
+				eg->data[j+1+i*FNAMLEN]=0;	
 			}
 		}
 	}
-	int packetSize=0;
+	int packetSize;
 	if((ppkt-packet)>(ETHER_SIZE+ETHER_MINPAYLOAD)){
 		packetSize = ppkt - packet;
 	}
@@ -109,16 +108,11 @@ void fishAsk(uchar *packet)
 int fishList(uchar *packet)
 {
 	struct ethergram *eg = (struct ethergram *)packet;
-	int x,y;
-	for(x=0;x<DIRENTRIES;x++){
-		for(y=0;y<FNAMLEN;y++){
-			fishlist[x][y]=0;
-		}
-	}
+	printf("inside fishList request\r\n");
 	/*Move dir entries into fishlist*/
 	for(int i = 0; i<DIRENTRIES;i++){
 		int offset = 1 + (i*FNAMLEN);
-		strncpy(fishlist[i], eg->data[offset], FNAMLEN);
+		strncpy(fishlist[i],&eg->data[offset], FNAMLEN);
 	}
 	return OK;
 }
@@ -243,10 +237,12 @@ int fileSharer(int dev)
 				break;
 
 			case FISH_DIRASK:
+				printf("recieved DIRASK\r\n");
 				fishAsk(packet);			
 				break;	
 
 			case FISH_DIRLIST:
+				printf("recieved DIRLIST\r\n");
 				fishList(packet);
 				break;
 

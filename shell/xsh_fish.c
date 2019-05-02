@@ -46,7 +46,68 @@ static int fishSend(uchar *dst, char fishtype)
 	
 	return OK;
 }
-		
+	
+/********************************************************************/
+/*fish send payload*/
+static int fishSendFilePayload(uchar *dst, char fishtype, char *payload){
+	uchar packet[PKTSZ];
+	uchar *ppkt = packet;
+	struct ethergram *eg = (struct ethergram *)packet;
+	int i = 0;
+	bzero(packet, PKTSZ);
+	for(i = 0; i < ETH_ADDR_LEN; i++){
+		*ppkt++ = dst[i];
+	}
+	control(ETH0, ETH_CTRL_GET_MAC, (long)ppkt, 0);
+	ppkt += ETH_ADDR_LEN;
+	*ppkt++ = ETYPE_FISH >> 8;
+	*ppkt++ = ETYPE_FISH & 0xFF;
+	*ppkt++ = fishtype;
+	memcpy(ppkt, payload, FNAMLEN);
+	ppkt += FNAMLEN;
+	eg->data[0] = FISH_HAVEFILE;
+	int payloadSize = DISKBLOCKLEN + FNAMLEN + 1;
+	int fd = fileOpen(payload);
+	i = FNAMLEN + 1;
+	char temp;
+	while(i < payloadSize){
+		if((temp = fileGetChar(fd)) != SYSERR){
+			eg->data[i] = temp;
+		}
+		else{
+			eg->data[i] = temp;
+		}
+		i++;
+	}
+	fileClose(fd);
+	write(ETH0, packet, ETHER_SIZE + FNAMLEN + DISKBLOCKLEN + 1);
+	return OK;
+}
+
+static int fishSendPayload(uchar *dst, char fishtype, char *payload){
+	uchar packet[PKTSZ];
+	uchar *ppkt = packet;
+	int i = 0;
+	bzero(packet, PKTSZ);
+	for(i = 0; i < ETH_ADDR_LEN; i++){
+		*ppkt++ = dst[i];
+	}
+	control(ETH0, ETH_CTRL_GET_MAC, (long)ppkt, 0);
+	ppkt += ETH_ADDR_LEN;
+	*ppkt++ = ETYPE_FISH >> 8;
+	*ppkt++ = ETYPE_FISH & 0xFF;
+	*ppkt++ = fishtype;
+	memcpy(ppkt, payload, FNAMLEN);
+	ppkt+= FNAMLEN;
+	for(i = 1; i < ETHER_MINPAYLOAD; i++){
+		*ppkt++ = 0;
+	}
+	write(ETH0, packet, ppkt - packet);
+	return OK;
+}
+
+
+	
 /**
  * Shell command (fish) is file sharing client.
  * @param args array of arguments
@@ -94,18 +155,12 @@ command xsh_fish(int nargs, char *args[])
 		if(same==0){
 			//send a DIRASK to that node
 			fishSend(school[j].mac,FISH_DIRASK);
-			//what happens when we send a FISH_DIRASK?
-			//testprint
-			printf("match found! \r\n");
 			//wait 1s for response
 			sleep(1000);	
 			/*Print contents of fishlist table*/
-			int dir,file;
-			printf("fishlist[0][0]: %c\r\n", fishlist[0][0]);
-			for(dir=0;dir<DIRENTRIES;dir++){
-				for(file=0;file<FNAMLEN;file++){
-					printf("%c\r\n",fishlist[dir][file]);
-				}
+			int i;
+			for(i=0;i<DIRENTRIES;i++){
+				printf("%s\r\n",fishlist[i]);
 			}
 		return OK;
 		}
@@ -118,15 +173,21 @@ command xsh_fish(int nargs, char *args[])
 /*                        if fish get ______                        */	
 	else if (nargs == 4 && strncmp(args[1], "get", 4) == 0)
 	{
-	//Locate named node in school
+	/*Traverse through school to find fish*/
 	for(j=0;j<SCHOOLMAX;j++){
 		if(school[j].name==args[2]){
 			//send the GETFILE packet
 			fishSend(school[j].mac,FISH_GETFILE);
-			//wait 1s for reply	
-			/*TO DO LATER... STORE THE FILE*/
-			//fileSharer puts file in system when it arrives
-			printf("File will be stored here");
+			//wait 1s for reply
+			sleep(1000);
+			/*traverse through fishlist to find file*/
+			for(int k=0;k<DIRENTRIES;k++){
+				int same = strncmp(args[3],fishlist[k],FISH_MAXNAME);
+				/*if file is found*/
+				if(same==0){
+					/*idk..*/
+				}
+			}
 		}
 		return OK;
 	}
