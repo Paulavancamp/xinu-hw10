@@ -108,7 +108,11 @@ void fishAsk(uchar *packet)
 int fishList(uchar *packet)
 {
 	struct ethergram *eg = (struct ethergram *)packet;
-	printf("inside fishList request\r\n");
+/*	for(int c=0;c<DIRENTRIES;c++){
+		for(int b =0;b<FISH_MAXNAME;b++){
+			fishlist[c][b]=NULL;
+		}
+	}*/
 	/*Move dir entries into fishlist*/
 	for(int i = 0; i<DIRENTRIES;i++){
 		int offset = 1 + (i*FNAMLEN);
@@ -218,6 +222,7 @@ int fileSharer(int dev)
 	/* Lookup canonical MAC in NVRAM, and store in ether struct */
  	colon2mac(nvramGet("et0macaddr"), myMAC);
 
+
 	while (SYSERR != (size = read(dev, packet, PKTSZ)))
 	{
 		/* Check packet to see if fileshare type with
@@ -237,12 +242,10 @@ int fileSharer(int dev)
 				break;
 
 			case FISH_DIRASK:
-				printf("recieved DIRASK\r\n");
 				fishAsk(packet);			
 				break;	
 
 			case FISH_DIRLIST:
-				printf("recieved DIRLIST\r\n");
 				fishList(packet);
 				break;
 

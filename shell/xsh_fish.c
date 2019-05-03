@@ -160,7 +160,10 @@ command xsh_fish(int nargs, char *args[])
 			/*Print contents of fishlist table*/
 			int i;
 			for(i=0;i<DIRENTRIES;i++){
+				if(fishlist[i]!=NULL){
 				printf("%s\r\n",fishlist[i]);
+				}
+				else{ break;}
 			}
 		return OK;
 		}
