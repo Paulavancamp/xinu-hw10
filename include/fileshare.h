@@ -67,7 +67,7 @@ struct fishnode
 	char  name[FISH_MAXNAME];
 };
 	
-#define SCHOOLMAX 10
+#define SCHOOLMAX 20
 
 extern struct fishnode school[SCHOOLMAX];
 

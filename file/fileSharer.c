@@ -133,41 +133,36 @@ void fishGet(uchar *packet)
 	/* Source of reply becomes me. */
 	memcpy(eg->src, myMAC, ETH_ADDR_LEN);
 	/* Zero out payload. */
-	bzero(eg->data, ETHER_MINPAYLOAD);
+//	bzero(eg->data, DISKBLOCKLEN);
 	int fileFound = 0;
 	struct filenode *tempNode = supertab->sb_dirlst->db_fnodes;
 	for(int i = 0;i<DIRENTRIES;i++){
 		if(tempNode[i].fn_state){
 			if(strncmp(tempNode[i].fn_name,&eg->data[1], FNAMLEN)==0){
-				fileFound = 1;
-				break;
+				printf("sending have file\n\r");
+				eg->data[0]=FISH_HAVEFILE;
+				int payloadSize = DISKBLOCKLEN+FNAMLEN+1;
+				int fd = fileOpen(&eg->data[1]);
+				int i=FNAMLEN+1;
+				char temp;
+				while(i<payloadSize){
+					if((temp=fileGetChar(fd)) != SYSERR){
+						eg->data[i] = temp;
+					}
+					else{
+						eg->data[i]=0;
+					}
+					i++;
+				}
+				fileClose(fd);
+				write(ETH0, packet, payloadSize);
+				return;
 			}
 		}
-			
 	}
-	int payloadSize = 0;
-	if(fileFound){
-		eg->data[0]=FISH_HAVEFILE;
-		payloadSize = DISKBLOCKLEN+FNAMLEN+1;
-		int fd = fileOpen(&eg->data[1]);
-		int i=FNAMLEN+1;
-		char temp;
-		while(i<payloadSize){
-			if((temp=fileGetChar(fd)) != SYSERR){
-				eg->data[i] = temp;
-			}
-			else{
-				eg->data[i]=0;
-			}
-			i++;
-		}
-		fileClose(fd);
-	}
-	else{
-		eg->data[0]=FISH_NOFILE;
-		payloadSize = ETHER_MINPAYLOAD;
-	}
-	write(ETH0, packet, payloadSize);
+	printf("sending nofile\n\r");
+	eg->data[0]=FISH_NOFILE;
+	write(ETH0, packet, ETHER_MINPAYLOAD+ETHER_SIZE);
 }
 /*------------------------------------------------------------------------
  * fish have file
@@ -180,14 +175,14 @@ void fishHave(uchar *packet)
 	int i, fd;
 	char temp[FNAMLEN + 1];
 	bzero(temp, FNAMLEN+1);
-	strncpy(temp,&eg->data[1],FNAMLEN);
+	memcpy(temp,&eg->data[1],FNAMLEN+1);
 	if((fd=fileOpen(temp))!= SYSERR){
 		if(fileDelete(fd) == SYSERR){
 			printf("ERROR");
 		}
 	}
 	if((fd=fileCreate(temp)) != SYSERR){
-		for(i=FNAMLEN+1;i<DISKBLOCKLEN+FNAMLEN+1;i++){
+		for(i=FNAMLEN+1;i<(DISKBLOCKLEN+FNAMLEN+1);i++){
 			filePutChar(fd,eg->data[i]);
 		}
 		fileClose(fd);
